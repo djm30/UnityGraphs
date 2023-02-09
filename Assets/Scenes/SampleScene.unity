@@ -331,7 +331,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 33fca474e74e740b9992ecb90c374058, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  fileName: MatGraph.csr
+  fileName: SmallGraph.csr
 --- !u!4 &1105999957
 Transform:
   m_ObjectHideFlags: 0
