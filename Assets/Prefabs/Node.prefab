@@ -111,8 +111,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: efa1a6a53b741472f88d10a19721414c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  connectedNodes: []
   connector: {fileID: 5473961151322511615, guid: 94b46da20f03548d9b8744af935ed3cd, type: 3}
+  connectedNodes: []
 --- !u!54 &4986631617800429208
 Rigidbody:
   m_ObjectHideFlags: 0

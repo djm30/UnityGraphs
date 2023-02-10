@@ -1,50 +1,33 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Collections;
 using UnityEngine;
 
 public class Node : MonoBehaviour
 {
-    [SerializeField] private GameObject connector;
+    [SerializeField] public int ID;
+    public static event Action<int> PositionChanged; 
+
+    private Vector3 _currentPosition;
     
-    public int ID { get; set; }
-    public List<GameObject> connectedNodes;
-    private GameObject connection;
-
-    void Start()
+    private void Start()
     {
-        connectedNodes.ForEach(otherNode =>
-        {
-            var position = transform.position;
-            
-            var direction = otherNode.transform.position - position;
-            var midPoint = direction / 2;
-
-            var spawnPoint = position + midPoint;
-            connection = Instantiate(connector, spawnPoint, GetConnectorRotation(direction));
-            connection.transform.localScale = new Vector3(0.2f,((direction.magnitude) / 2), 0.2f);
-        });
-        
+        _currentPosition = transform.position;
     }
 
-    void Update()
+    private void Update()
     {
-        connectedNodes.ForEach(otherNode =>
+        if (transform.position - _currentPosition != Vector3.zero)
         {
-            var position = transform.position;
-            
-            var direction = otherNode.transform.position - position;
-            var midPoint = direction / 2;
+            OnPositionChanged(ID);
+        }
 
-            var spawnPoint = position + midPoint;
-
-            connection.transform.position = spawnPoint;
-            connection.transform.rotation = GetConnectorRotation(direction);
-            connection.transform.localScale = new Vector3(0.2f,((direction.magnitude) / 2), 0.2f);
-        });
+        _currentPosition = transform.position;
     }
 
-    Quaternion GetConnectorRotation(Vector3 direction)
+    private static void OnPositionChanged(int obj)
     {
-        return Quaternion.FromToRotation(Vector3.up, direction);
+        PositionChanged?.Invoke(obj);
     }
 }
