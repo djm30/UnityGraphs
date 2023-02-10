@@ -7,6 +7,7 @@ namespace DefaultNamespace
     public class SparseMatrix
     {
 
+        // TODO make a script that can generate graph files
         private static SparseMatrix _instance;
         
         private readonly Dictionary<int, List<int>> _destinations;

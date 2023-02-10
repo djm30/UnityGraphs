@@ -12,8 +12,8 @@ using Random = UnityEngine.Random;
 public class Loader : MonoBehaviour
 {
 
-    [FormerlySerializedAs("FileName")] [SerializeField] private string fileName;
-    
+    [FormerlySerializedAs("FileName")][SerializeField] private string fileName;
+
     private readonly SparseMatrix _matrix = SparseMatrix.GetInstance();
 
     private void Awake()
@@ -22,11 +22,11 @@ public class Loader : MonoBehaviour
         // SpawnNodes();
         // ConfigureNodes();
     }
-    
+
     private void ReadFile()
     {
         // Reading graph in from the file
-        var path = Path.Combine(Application.dataPath + "/Graphs/" + fileName);
+        var path = Path.Combine(Application.dataPath + "/Graphs/" + fileName + ".csr");
         if (!File.Exists(path))
         {
             Debug.Log("File not found");
