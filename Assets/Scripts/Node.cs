@@ -12,10 +12,13 @@ public class Node : MonoBehaviour
     public static event Action<int> PositionChanged; 
 
     private Vector3 _currentPosition;
+    private MeshRenderer _meshRenderer;
+    private bool selected = false;
     
     private void Start()
     {
         _currentPosition = transform.position;
+        _meshRenderer ??= GetComponent<MeshRenderer>();
     }
 
     private void Update()
@@ -32,10 +35,17 @@ public class Node : MonoBehaviour
     {
         PositionChanged?.Invoke(obj);
     }
-
-    private void OnMouseDown()
+    
+    
+    public void Select()
     {
-        Debug.Log("Clicked on node " + ID);
-        GetComponent<MeshRenderer>().material = selectedMaterial;
+        selected = true;
+        _meshRenderer.material = selectedMaterial;
+    }
+    
+    public void Deselect()
+    {
+        selected = false;
+        _meshRenderer.material = defaultMaterial;
     }
 }
