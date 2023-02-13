@@ -5,7 +5,7 @@ import os
 def generate_csr_representation(num_vertices, max_out_degree):
     csr = []
     for i in range(num_vertices):
-        out_degree = min(random.randint(1, max_out_degree), num_vertices - 1)
+        out_degree = min(random.randint(0, max_out_degree), num_vertices - 1)
         csr_row = [i]
         selected_nodes = set()
         for j in range(out_degree):

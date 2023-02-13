@@ -7,6 +7,8 @@ using UnityEngine;
 public class Node : MonoBehaviour
 {
     [SerializeField] public int ID;
+    [SerializeField] private Material defaultMaterial;
+    [SerializeField] private Material selectedMaterial;
     public static event Action<int> PositionChanged; 
 
     private Vector3 _currentPosition;
@@ -18,7 +20,7 @@ public class Node : MonoBehaviour
 
     private void Update()
     {
-        if (transform.position - _currentPosition != Vector3.zero)
+        if (_currentPosition != transform.position)
         {
             OnPositionChanged(ID);
         }
@@ -29,5 +31,11 @@ public class Node : MonoBehaviour
     private static void OnPositionChanged(int obj)
     {
         PositionChanged?.Invoke(obj);
+    }
+
+    private void OnMouseDown()
+    {
+        Debug.Log("Clicked on node " + ID);
+        GetComponent<MeshRenderer>().material = selectedMaterial;
     }
 }

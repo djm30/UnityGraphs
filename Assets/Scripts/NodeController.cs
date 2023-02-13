@@ -1,112 +1,113 @@
 using System;
 using System.Collections.Generic;
+using DefaultNamespace;
 using Unity.VisualScripting;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
-namespace DefaultNamespace
+public class NodeController : MonoBehaviour
 {
-    public class NodeController : MonoBehaviour
+
+    [SerializeField] private GameObject node;
+    [SerializeField] private GameObject lineRenderer;
+    [SerializeField] private GameObject nodeParent;
+    [SerializeField] private GameObject lineParent;
+        
+    private readonly Dictionary<int, List<LineDrawer>> _lines = new();
+    private readonly Dictionary<(int,int), LineDrawer> _hasConnection = new();
+    private readonly SparseMatrix _matrix = SparseMatrix.GetInstance();
+    private Transform[] _nodes;
+
+    private void Start()
     {
 
-        [SerializeField] private GameObject node;
-        [SerializeField] private GameObject connector;
-
-        private Transform[] _nodes;
-        private readonly SparseMatrix _matrix = SparseMatrix.GetInstance();
-        private readonly Dictionary<int, List<GameObject>> connections = new();
-
-        private void Start()
+        Node.PositionChanged += OnNodePosChanged;
+            
+        // Allocating Memory 
+        _nodes = new Transform[_matrix.NumNodes()];
+            
+        for (int i = 0; i < _matrix.NumNodes(); i++)
         {
-
-            Node.PositionChanged += OnNodePosChanged;
-            
-            // Allocating Memory 
-            _nodes = new Transform[_matrix.NumNodes()];
-            
-            for (int i = 0; i < _matrix.NumNodes(); i++)
-            {
-                var createdNode = Instantiate(node, RandomSpawnLocation(), Quaternion.identity);
-                createdNode.GetComponent<Node>().ID = i;
-                _nodes[i] = createdNode.transform;
-            }
-            
-            DrawConnections();
+            // Spawning in node
+            var createdNode = Instantiate(node, RandomSpawnLocation(), Quaternion.identity);
+            createdNode.transform.SetParent(nodeParent.transform);
+            createdNode.GetComponent<Node>().ID = i;
+            _nodes[i] = createdNode.transform;
+                
+            // Assigning each node a list to store lines to it connects to/ connects to itself
+            _lines.Add(i, new List<LineDrawer>());
         }
-
-        private void DrawConnections()
+            
+        DrawConnections();
+    }
+        
+    private void DrawConnections()
+    {
+        for (int i = 0; i < _nodes.Length; i++)
         {
-            for (int i = 0; i < _nodes.Length; i++)
+            var destinations = _matrix.GetNode(i);
+            for (int j = 0; j < destinations.Count; j++)
             {
-                var destinations = _matrix.GetNode(i);
-                for (int j = 0; j < destinations.Count; j++)
-                {
-                    DrawConnection(i, destinations[j]);
-                }
+                DrawConnection(i, destinations[j]);
             }
         }
+    }
 
-        private void DrawConnection(int source, int destination)
+    private void DrawConnection(int source, int destination)
+    {
+        // Checking if this node pair already has a connection
+        if (_hasConnection.TryGetValue(GetConnection(source, destination), out var renderedLine))
         {
-            var sourcePos = _nodes[source].position;
-            var destPos = _nodes[destination].position;
+            // If a connection has already been drawn, it is added to the list of connections for the source node
+            _lines[source].Add(renderedLine);
+            return;
+        }
             
-            var direction = destPos - sourcePos;
-            var midPoint = direction / 2;
+        // Creating game object with line renderer
+        var line = Instantiate(lineRenderer);
+            
+        var lineDrawer = line.GetComponent<LineDrawer>();
+            
+        lineDrawer.Initialise(source, destination);
+        lineDrawer.Draw(_nodes[lineDrawer.SourceNode], _nodes[lineDrawer.DestinationNode]);
+        
+        line.transform.SetParent(lineParent.transform);
+            
+        
+        // Setting that this node pair now already have a connection drawn between them
+        _hasConnection.Add(GetConnection(source, destination), lineDrawer);
+        // Adding that line to the list of lines that connect to the source node
+        _lines[source].Add(lineDrawer);
+        if(!_lines[destination].Contains(lineDrawer))
+            // Adding the line to the list of lines that connect to the destination node given it isnt already present
+            _lines[destination].Add(lineDrawer);
+    }
+    
+    private Vector3 RandomSpawnLocation()
+    {
+        var range = GetRange();
+        var x = Random.Range(-range, range);
+        var y = Random.Range(-range, range);
+        var z = Random.Range(-range, range);
+        return new Vector3(x, y, z);
+    }
 
-            var spawnPoint = sourcePos + midPoint;
-            var connection = Instantiate(connector, spawnPoint, GetConnectorRotation(direction));
-            connection.transform.localScale = new Vector3(0.2f,((direction.magnitude) / 2), 0.2f);
-            
-            if(!connections.ContainsKey(source))
-                connections.Add(source, new List<GameObject>());
-            
-            connections[source].Add(connection);
-        }
-        
-        Quaternion GetConnectorRotation(Vector3 direction)
-        {
-            return Quaternion.FromToRotation(Vector3.up, direction);
-        }
-        
-        private Vector3 RandomSpawnLocation()
-        {
-            var range = GetRange();
-            var x = Random.Range(-range, range);
-            var y = Random.Range(-range, range);
-            var z = Random.Range(-range, range);
-            return new Vector3(x, y, z);
-        }
-        private float GetRange() => Mathf.Ceil(Mathf.Pow(_nodes.Length, 1 / 3f)) + 50;
+    private float GetRange() => Mathf.Log(_nodes.Length * 2) * 20f;
 
 
-        void OnNodePosChanged(int source)
+
+    void OnNodePosChanged(int source)
+    {
+        // Redraws all lines after the transform of the source node has changed
+        _lines[source].ForEach(drawer =>
         {
-            RedrawConnections(source, true);
-        }
+            drawer.Draw(_nodes[drawer.SourceNode], _nodes[drawer.DestinationNode]);
+        });
+    }
+    
         
-        // Not a great solution currently, might be better to store of each connection and modify the transform instead
-        // As a lot of overhead is involved in this due to deleting and recreating lines that may not even have been moved
-        void RedrawConnections(int source, bool recursive)
-        {
-            // Destroying every connection attached to this node
-            connections[source].ForEach(Destroy);
-            
-            
-            var destinations = _matrix.GetNode(source);
-            
-            destinations.ForEach(destination =>
-            {
-                // Redrawing the connection
-                DrawConnection(source, destination);
-                // Redraws lines of all connected nodes as well
-                if(recursive)
-                    RedrawConnections(destination, false);
-            });
-        }
-        
-        // When redrawing connections after a transform has moved
-        // Redraw the connections of all of its connections so duplicate connections can be sorted out
-        // either that, or find a way to draw a connection only once some how
+    (int, int) GetConnection(int source, int destination)
+    {
+        return source < destination ? (source, destination) : (destination, source);
     }
 }
