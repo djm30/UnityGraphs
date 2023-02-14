@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class MouseRaycast : MonoBehaviour
 {
@@ -9,17 +10,16 @@ public class MouseRaycast : MonoBehaviour
     
     void Start()
     {
-        // ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        ray = Camera.main.ScreenPointToRay(Mouse.current.position.ReadValue());
     }
     
     void Update()
     {
-        // ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        // if (Input.GetMouseButtonDown(0))
-        // {
-        //     Debug.Log("Mouse button clicked");
-        //     CheckCollision();
-        // }
+        ray = Camera.main.ScreenPointToRay(Mouse.current.position.ReadValue());
+        if (Mouse.current.leftButton.isPressed)
+        {
+            CheckCollision();
+        }
     }
 
     void CheckCollision()

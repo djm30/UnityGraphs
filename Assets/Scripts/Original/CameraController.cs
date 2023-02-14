@@ -36,15 +36,12 @@ public class CameraController : MonoBehaviour
         _speedUp = _playerInput.actions["Speedup"];
         _middleMouse = _playerInput.actions["MiddleMouseButton"];
         
-        
         _moveCameraAction.Enable();
         _rotateCameraAction.Enable();
         _zoomCamera.Enable();
         _enableMovement.Enable();
         _speedUp.Enable();
         _middleMouse.Enable();
-        
-        Debug.Log(_zoomCamera.enabled);
     }
     
     private void OnDisable()
